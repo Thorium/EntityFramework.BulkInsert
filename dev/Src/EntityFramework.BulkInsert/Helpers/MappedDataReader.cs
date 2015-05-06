@@ -13,6 +13,7 @@ using System.Data.Spatial;
 
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using EntityFramework.BulkInsert.Extensions;
 using EntityFramework.BulkInsert.Providers;
 using EntityFramework.MappingAPI;
@@ -45,6 +46,7 @@ namespace EntityFramework.BulkInsert.Helpers
         public string SchemaName { get; private set; }
 
         public IEfBulkInsertProvider Provider { get; private set; }
+        private static object lockobj = new object();
 
         /// <summary>
         /// 
@@ -53,6 +55,8 @@ namespace EntityFramework.BulkInsert.Helpers
         /// <param name="provider"></param>
         public MappedDataReader(IEnumerable<T> enumerable, IEfBulkInsertProvider provider)
         {
+            lock(lockobj)
+            {
             Refs = new Dictionary<Type, List<object>>();
 
             Provider = provider;
@@ -76,7 +80,7 @@ namespace EntityFramework.BulkInsert.Helpers
                 }
             }
 
-            if (tableMappings.Count == 0)
+            if (tableMappings == null || tableMappings.Count == 0)
             {
                 throw new Exception("No table mappings provided.");
             }
@@ -149,6 +153,7 @@ namespace EntityFramework.BulkInsert.Helpers
             }
 
             FieldCount = i;
+            }
         }
 
         public void Dispose()
